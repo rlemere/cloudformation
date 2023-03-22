@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS Site-to-Site VPN: Customer Gateway, Virtual Private Gateway, and VPN Connection'
+
+Resources:
+  CustomerGateway:
+    Type: 'AWS::EC2::CustomerGateway'
+    Properties:
+      BgpAsn: 65000
+      IpAddress: 203.0.113.0
+      Type: ipsec.1
+      Tags:
+        - Key: Name
+          Value: ExampleCustomerGateway
+
+  VirtualPrivateGateway:
+    Type: 'AWS::EC2::VPNGateway'
+    Properties:
+      Type: ipsec.1
+      Tags:
+        - Key: Name
+          Value: ExampleVPNGateway
+
+  VPCGatewayAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref VPC
+      VpnGatewayId: !Ref VirtualPrivateGateway
+
+  VPNConnection:
+    Type: 'AWS::EC2::VPNConnection'
+    Properties:
+      CustomerGatewayId: !Ref CustomerGateway
+      Type: ipsec.1
+      VirtualPrivateGatewayId: !Ref VirtualPrivateGateway
+      StaticRoutesOnly: true
+      Tags:
+        - Key: Name
+          Value: ExampleVPNConnection
