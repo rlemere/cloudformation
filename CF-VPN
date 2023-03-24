@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Creates a Customer Gateway, VPN Connection with static routing, acceleration, and hard-set tunnel options"
+Parameters:
+  CustomerGatewayIpAddress:
+    Description: "The public IP address of your Customer Gateway"
+    Type: String
+  VpnInsideCidr1:
+    Description: "The first inside CIDR block for the VPN tunnel"
+    Type: String
+  VpnInsideCidr2:
+    Description: "The second inside CIDR block for the VPN tunnel"
+    Type: String
+  VpnStaticRoute:
+    Description: "The static route to be added to the VPN connection"
+    Type: String
+
+Resources:
+  CustomerGateway:
+    Type: AWS::EC2::CustomerGateway
+    Properties:
+      BgpAsn: 65000
+      IpAddress: !Ref CustomerGatewayIpAddress
+      Type: ipsec.1
+
+  VpnConnection:
+    Type: AWS::EC2::VPNConnection
+    Properties:
+      CustomerGatewayId: !Ref CustomerGateway
+      Type: ipsec.1
+      StaticRoutesOnly: true
+      AccelerationOptions:
+        Enabled: true
+      VpnTunnelOptionsSpecifications:
+        - TunnelInsideCidr: !Ref VpnInsideCidr1
+          Phase1EncryptionAlgorithms: [{Value: AES256}]
+          Phase2EncryptionAlgorithms: [{Value: AES256}]
+          IkeVersions: [{Value: ikev2}]
+          Phase1IntegrityAlgorithms: [{Value: SHA2-384}]
+          Phase2IntegrityAlgorithms: [{Value: SHA2-384}]
+          Phase1DHGroupNumbers: [{Value: 19}]
+          Phase2DHGroupNumbers: [{Value: 19}]
+          StartupAction: add
+        - TunnelInsideCidr: !Ref VpnInsideCidr2
+          Phase1EncryptionAlgorithms: [{Value: AES256}]
+          Phase2EncryptionAlgorithms: [{Value: AES256}]
+          IkeVersions: [{Value: ikev2}]
+          Phase1IntegrityAlgorithms: [{Value: SHA2-384}]
+          Phase2IntegrityAlgorithms: [{Value: SHA2-384}]
+          Phase1DHGroupNumbers: [{Value: 19}]
+          Phase2DHGroupNumbers: [{Value: 19}]
+          StartupAction: add
+
+  VpnConnectionRoute:
+    Type: AWS::EC2::VPNConnectionRoute
+    Properties:
+      VpnConnectionId: !Ref VpnConnection
+      DestinationCidrBlock: !Ref VpnStaticRoute
